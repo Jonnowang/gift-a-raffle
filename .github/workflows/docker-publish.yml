@@ -37,4 +37,4 @@ jobs:
           context: .
           platforms: linux/arm64
           push: true
-          tags: lhr.ocir.io/lrwuubtwxjma/give-a-raffle:1.0.0
+          tags: lhr.ocir.io/lrwuubtwxjma/constellation-images/give-a-raffle:1.0.0
