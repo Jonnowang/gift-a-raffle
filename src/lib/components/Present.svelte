@@ -26,7 +26,7 @@
 		class:open-prize={open}
 	>
 		<div
-			class="prize transform rounded-lg bg-gradient-to-r from-yellow-400 to-amber-500 p-4 text-gray-800 shadow-lg transition-transform duration-300 hover:scale-110"
+			class="prize transform rounded-lg bg-linear-to-r from-yellow-400 to-amber-500 p-4 text-gray-800 shadow-lg transition-transform duration-300 hover:scale-110"
 		>
 			{@render children()}
 		</div>

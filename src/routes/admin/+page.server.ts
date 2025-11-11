@@ -14,7 +14,8 @@ export const actions: Actions = {
 		const name = data.get('name') as string;
 		const weight = parseInt(data.get('weight') as string);
 		const quantity = parseInt(data.get('quantity') as string);
-		await addPrize(name, weight, quantity);
+		const imageUrl = data.get('image_url') as string;
+		await addPrize(name, weight, quantity, imageUrl);
 	},
 	removePrize: async ({ request }) => {
 		const data = await request.formData();
@@ -27,6 +28,7 @@ export const actions: Actions = {
 		const name = data.get('name') as string;
 		const weight = parseInt(data.get('weight') as string);
 		const quantity = parseInt(data.get('quantity') as string);
-		await updatePrize(id, name, weight, quantity);
+		const imageUrl = data.get('image_url') as string;
+		await updatePrize(id, name, weight, quantity, imageUrl);
 	}
 };

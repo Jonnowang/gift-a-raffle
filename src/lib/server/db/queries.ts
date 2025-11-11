@@ -5,6 +5,7 @@ interface Prize {
 	name: string;
 	weight: number;
 	quantity: number;
+	image_url: string | null;
 }
 
 // Tickets
@@ -31,11 +32,17 @@ export async function getPrizes() {
 	return rows as Prize[];
 }
 
-export async function addPrize(name: string, weight: number, quantity: number) {
-	await pool.query('INSERT INTO prizes (name, weight, quantity) VALUES (?, ?, ?)', [
+export async function addPrize(
+	name: string,
+	weight: number,
+	quantity: number,
+	imageUrl: string | null
+) {
+	await pool.query('INSERT INTO prizes (name, weight, quantity, image_url) VALUES (?, ?, ?, ?)', [
 		name,
 		weight,
-		quantity
+		quantity,
+		imageUrl
 	]);
 }
 
@@ -43,13 +50,17 @@ export async function removePrize(id: number) {
 	await pool.query('DELETE FROM prizes WHERE id = ?', [id]);
 }
 
-export async function updatePrize(id: number, name: string, weight: number, quantity: number) {
-	await pool.query('UPDATE prizes SET name = ?, weight = ?, quantity = ? WHERE id = ?', [
-		name,
-		weight,
-		quantity,
-		id
-	]);
+export async function updatePrize(
+	id: number,
+	name: string,
+	weight: number,
+	quantity: number,
+	imageUrl: string | null
+) {
+	await pool.query(
+		'UPDATE prizes SET name = ?, weight = ?, quantity = ?, image_url = ? WHERE id = ?',
+		[name, weight, quantity, imageUrl, id]
+	);
 }
 
 // Prize Log
