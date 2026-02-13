@@ -46,7 +46,16 @@ export const actions: Actions = {
 		const prize = prizes.find((p) => p.id === id);
 
 		if (prize) {
-			await updatePrize(id, prize.name, prize.weight, prize.quantity, prize.image_url, active);
+			await updatePrize(
+				id,
+				prize.name,
+				prize.weight,
+				prize.quantity,
+				prize.image_url,
+				active,
+				prize.price,
+				prize.is_monetary
+			);
 		}
 	}
 };
