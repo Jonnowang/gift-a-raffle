@@ -9,6 +9,9 @@
 		weight: number;
 		quantity: number;
 		image_url: string | null;
+		active: boolean;
+		price: number;
+		is_monetary: boolean;
 	};
 
 	let { data }: { data: PageData } = $props();
@@ -17,6 +20,9 @@
 	let newPrizeWeight = $state(1);
 	let newPrizeQuantity = $state(1);
 	let newPrizeImageUrl = $state('');
+	let newPrizeActive = $state(true);
+	let newPrizePrice = $state(0);
+	let newPrizeIsMonetary = $state(false);
 	let editingId = $state(-1);
 	let editingPrize: Prize | null = $state(null);
 
@@ -31,7 +37,7 @@
 	}
 </script>
 
-<div class="container mx-auto p-4 text-gray-200">
+<div class="container mx-auto p-4 text-white">
 	<h1 class="mb-4 text-2xl font-bold">Admin Panel</h1>
 
 	<div class="mb-8">
@@ -60,41 +66,62 @@
 							newPrizeWeight = 1;
 							newPrizeQuantity = 1;
 							newPrizeImageUrl = '';
+							newPrizeActive = true;
+							newPrizePrice = 0;
+							newPrizeIsMonetary = false;
 							await invalidateAll();
 						}
 					};
 				}
 			}}
 		>
-			<input
-				type="text"
-				name="name"
-				bind:value={newPrizeName}
-				class="mr-2 rounded border border-gray-600 bg-gray-700 p-2 text-white"
-				placeholder="Enter a new prize"
-			/>
-			<input
-				type="number"
-				name="weight"
-				bind:value={newPrizeWeight}
-				class="mr-2 w-24 rounded border border-gray-600 bg-gray-700 p-2 text-white"
-				min="1"
-			/>
-			<input
-				type="number"
-				name="quantity"
-				bind:value={newPrizeQuantity}
-				class="mr-2 w-24 rounded border border-gray-600 bg-gray-700 p-2 text-white"
-				min="1"
-			/>
-			<input
-				type="text"
-				name="image_url"
-				bind:value={newPrizeImageUrl}
-				class="mr-2 rounded border border-gray-600 bg-gray-700 p-2 text-white"
-				placeholder="Enter image URL"
-			/>
-			<button type="submit" class="rounded bg-blue-500 p-2 text-white">Add Prize</button>
+			<div class="flex flex-wrap items-center gap-2">
+				<input
+					type="text"
+					name="name"
+					bind:value={newPrizeName}
+					class="rounded border border-gray-600 bg-gray-700 p-2 text-white"
+					placeholder="Enter a new prize"
+				/>
+				<input
+					type="number"
+					name="weight"
+					bind:value={newPrizeWeight}
+					class="w-24 rounded border border-gray-600 bg-gray-700 p-2 text-white"
+					min="1"
+				/>
+				<input
+					type="number"
+					name="quantity"
+					bind:value={newPrizeQuantity}
+					class="w-24 rounded border border-gray-600 bg-gray-700 p-2 text-white"
+					min="1"
+				/>
+				<input
+					type="number"
+					step="0.01"
+					name="price"
+					bind:value={newPrizePrice}
+					class="w-24 rounded border border-gray-600 bg-gray-700 p-2 text-white"
+					placeholder="Price"
+				/>
+				<input
+					type="text"
+					name="image_url"
+					bind:value={newPrizeImageUrl}
+					class="rounded border border-gray-600 bg-gray-700 p-2 text-white"
+					placeholder="Enter image URL"
+				/>
+				<label class="flex items-center space-x-2">
+					<input type="checkbox" name="active" bind:checked={newPrizeActive} />
+					<span>Active</span>
+				</label>
+				<label class="flex items-center space-x-2">
+					<input type="checkbox" name="is_monetary" bind:checked={newPrizeIsMonetary} />
+					<span>Monetary</span>
+				</label>
+				<button type="submit" class="rounded bg-blue-500 p-2 text-white">Add Prize</button>
+			</div>
 		</form>
 
 		<table class="mt-4 w-full table-auto">
@@ -103,7 +130,10 @@
 					<th class="border-b border-gray-600 px-4 py-2 text-left">Prize Name</th>
 					<th class="border-b border-gray-600 px-4 py-2 text-left">Weight</th>
 					<th class="border-b border-gray-600 px-4 py-2 text-left">Quantity</th>
+					<th class="border-b border-gray-600 px-4 py-2 text-left">Price</th>
 					<th class="border-b border-gray-600 px-4 py-2 text-left">Image URL</th>
+					<th class="border-b border-gray-600 px-4 py-2 text-left">Monetary</th>
+					<th class="border-b border-gray-600 px-4 py-2 text-left">Active</th>
 					<th class="border-b border-gray-600 px-4 py-2"></th>
 				</tr>
 			</thead>
@@ -136,10 +166,24 @@
 							</td>
 							<td class="border-t border-gray-600 px-4 py-2">
 								<input
+									type="number"
+									step="0.01"
+									bind:value={editingPrize.price}
+									class="w-24 rounded border border-gray-600 bg-gray-700 p-1 text-white"
+								/>
+							</td>
+							<td class="border-t border-gray-600 px-4 py-2">
+								<input
 									type="text"
 									bind:value={editingPrize.image_url}
 									class="w-full rounded border border-gray-600 bg-gray-700 p-1 text-white"
 								/>
+							</td>
+							<td class="border-t border-gray-600 px-4 py-2">
+								<input type="checkbox" bind:checked={editingPrize.is_monetary} />
+							</td>
+							<td class="border-t border-gray-600 px-4 py-2">
+								<input type="checkbox" bind:checked={editingPrize.active} />
 							</td>
 							<td class="border-t border-gray-600 px-4 py-2">
 								<form
@@ -159,6 +203,13 @@
 									<input type="hidden" name="weight" value={editingPrize.weight} />
 									<input type="hidden" name="quantity" value={editingPrize.quantity} />
 									<input type="hidden" name="image_url" value={editingPrize.image_url} />
+									<input type="hidden" name="active" value={editingPrize.active ? 'on' : 'off'} />
+									<input type="hidden" name="price" value={editingPrize.price} />
+									<input
+										type="hidden"
+										name="is_monetary"
+										value={editingPrize.is_monetary ? 'on' : 'off'}
+									/>
 									<button type="submit" class="mr-2 rounded bg-green-500 p-1 text-white"
 										>Save</button
 									>
@@ -173,7 +224,22 @@
 							<td class="border-t border-gray-600 px-4 py-2">{prize.name}</td>
 							<td class="border-t border-gray-600 px-4 py-2">{prize.weight}</td>
 							<td class="border-t border-gray-600 px-4 py-2">{prize.quantity}</td>
+							<td class="border-t border-gray-600 px-4 py-2">£{prize.price.toFixed(2)}</td>
 							<td class="border-t border-gray-600 px-4 py-2">{prize.image_url}</td>
+							<td class="border-t border-gray-600 px-4 py-2">
+								{prize.is_monetary ? 'Yes' : 'No'}
+							</td>
+							<td class="border-t border-gray-600 px-4 py-2">
+								<form method="POST" action="?/togglePrizeActive" use:enhance>
+									<input type="hidden" name="id" value={prize.id} />
+									<input
+										type="checkbox"
+										name="active"
+										checked={prize.active}
+										onchange={(e) => e.currentTarget.form?.requestSubmit()}
+									/>
+								</form>
+							</td>
 							<td class="border-t border-gray-600 px-4 py-2">
 								<button
 									onclick={() => startEditing(prize)}

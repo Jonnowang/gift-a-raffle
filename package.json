@@ -47,6 +47,7 @@
 		"vite": "^7.1.12"
 	},
 	"dependencies": {
+		"@neoconfetti/svelte": "^2.2.2",
 		"canvas-confetti": "^1.9.4",
 		"mysql2": "^3.9.7"
 	}

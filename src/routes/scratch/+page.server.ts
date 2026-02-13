@@ -15,7 +15,7 @@ export const actions: Actions = {
 		const ticket = tickets[Math.floor(Math.random() * tickets.length)];
 
 		const prizes = await getPrizes();
-		const availablePrizes = prizes.filter((p) => p.quantity > 0);
+		const availablePrizes = prizes.filter((p) => p.quantity > 0 && p.active);
 
 		if (availablePrizes.length === 0) {
 			return { prize: 'No prizes available!' };

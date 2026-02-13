@@ -37,6 +37,15 @@
 					goto('/scratch');
 				}}>Scratch Card</Button
 			>
+			<div class="mx-2 h-6 w-px bg-gray-600"></div>
+			<Button
+				size="sm"
+				class="border-none bg-linear-to-r from-green-600 to-emerald-700 font-bold text-white transition-all duration-300 hover:from-green-700 hover:to-emerald-800"
+				onclick={() => {
+					// eslint-disable-next-line svelte/no-navigation-without-resolve
+					goto('/gift-shop');
+				}}>Gift Shop</Button
+			>
 		</div>
 	</nav>
 </div>
