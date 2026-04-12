@@ -2,7 +2,7 @@ import mysql from 'mysql2/promise';
 import { env } from '$env/dynamic/private';
 import { building } from '$app/environment';
 
-let pool;
+let pool: mysql.Pool;
 
 if (!building) {
 	const { DB_USER, DB_PASSWORD, DB_HOST, DB_NAME } = env;

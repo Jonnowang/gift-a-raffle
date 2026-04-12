@@ -1,4 +1,14 @@
-<div class="ticket-container">
+<script lang="ts">
+	let { tier = 'gold' }: { tier?: 'bronze' | 'silver' | 'gold' } = $props();
+
+	const colors = {
+		bronze: '#cd7f32',
+		silver: '#c0c0c0',
+		gold: '#f9a825'
+	};
+</script>
+
+<div class="ticket-container" style="--ticket-color: {colors[tier]};">
 	<div class="ticket">
 		<div class="ticket-left">
 			<div class="ticket-content">
@@ -30,7 +40,7 @@
 	.ticket-right {
 		width: 50%;
 		height: 100%;
-		background-color: #f9a825;
+		background-color: var(--ticket-color, #f9a825);
 		border: 2px dashed #fff;
 		display: flex;
 		justify-content: center;

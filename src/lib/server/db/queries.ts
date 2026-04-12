@@ -25,19 +25,23 @@ interface RawPrize {
 // Tickets
 export async function getTickets() {
 	const [rows] = await pool.query('SELECT * FROM tickets ORDER BY created_at DESC');
-	return rows as { id: number; created_at: string }[];
+	return rows as { id: number; tier: 'bronze'|'silver'|'gold'; created_at: string }[];
 }
 
-export async function addTicket() {
-	await pool.query('INSERT INTO tickets () VALUES ()');
+export async function addTicket(tier: 'bronze' | 'silver' | 'gold' = 'bronze') {
+	await pool.query('INSERT INTO tickets (tier) VALUES (?)', [tier]);
 }
 
 export async function removeTicket(id: number) {
 	await pool.query('DELETE FROM tickets WHERE id = ?', [id]);
 }
 
-export async function removeRandomTicket() {
-	await pool.query('DELETE FROM tickets ORDER BY RAND() LIMIT 1');
+export async function removeRandomTicket(tier?: 'bronze' | 'silver' | 'gold') {
+	if (tier) {
+		await pool.query('DELETE FROM tickets WHERE tier = ? ORDER BY RAND() LIMIT 1', [tier]);
+	} else {
+		await pool.query('DELETE FROM tickets ORDER BY RAND() LIMIT 1');
+	}
 }
 
 // Prizes
@@ -143,6 +147,110 @@ export async function setLastTicketDate(date: string) {
 	);
 }
 
+export async function getLastSilverTicketDate(): Promise<string | null> {
+	const [rows] = await pool.query('SELECT config_value FROM app_config WHERE config_key = ?', [
+		'lastSilverTicketDate'
+	]);
+	if (Array.isArray(rows) && rows.length > 0) {
+		return (rows[0] as { config_value: string }).config_value;
+	}
+	return null;
+}
+
+export async function setLastSilverTicketDate(date: string) {
+	await pool.query(
+		'INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = ?',
+		['lastSilverTicketDate', date, date]
+	);
+}
+
+export async function getLastGoldTicketDate(): Promise<string | null> {
+	const [rows] = await pool.query('SELECT config_value FROM app_config WHERE config_key = ?', [
+		'lastGoldTicketDate'
+	]);
+	if (Array.isArray(rows) && rows.length > 0) {
+		return (rows[0] as { config_value: string }).config_value;
+	}
+	return null;
+}
+
+export async function setLastGoldTicketDate(date: string) {
+	await pool.query(
+		'INSERT INTO app_config (config_key, config_value) VALUES (?, ?) ON DUPLICATE KEY UPDATE config_value = ?',
+		['lastGoldTicketDate', date, date]
+	);
+}
+
+export async function processDailyTickets() {
+	let awardedDaily = false;
+
+	try {
+		const [lastTicketDateStr, lastSilverTicketDateStr, lastGoldTicketDateStr] = await Promise.all([
+			getLastTicketDate(),
+			getLastSilverTicketDate(),
+			getLastGoldTicketDate()
+		]);
+		const now = new Date();
+		const lastTicketDate = lastTicketDateStr ? new Date(lastTicketDateStr) : null;
+		const lastSilverTicketDate = lastSilverTicketDateStr ? new Date(lastSilverTicketDateStr) : null;
+		const lastGoldTicketDate = lastGoldTicketDateStr ? new Date(lastGoldTicketDateStr) : null;
+
+		const SEVEN_HOURS_IN_MS = 7 * 3600 * 1000;
+		const ONE_DAY_IN_MS = 24 * 3600 * 1000;
+
+		const currentTicketDayNumber = Math.floor((now.getTime() - SEVEN_HOURS_IN_MS) / ONE_DAY_IN_MS);
+		const lastTicketDayNumber = lastTicketDate
+			? Math.floor((lastTicketDate.getTime() - SEVEN_HOURS_IN_MS) / ONE_DAY_IN_MS)
+			: -1;
+
+		if (now.getUTCHours() >= 7 && currentTicketDayNumber > lastTicketDayNumber) {
+			await addTicket('bronze');
+			await setLastTicketDate(now.toISOString());
+			awardedDaily = true;
+
+			// Monthly Silver Ticket on the 15th
+			if (now.getDate() === 15) {
+				const currentMonth = now.getUTCMonth();
+				const currentYear = now.getUTCFullYear();
+				const lastSilverMonth = lastSilverTicketDate ? lastSilverTicketDate.getUTCMonth() : -1;
+				const lastSilverYear = lastSilverTicketDate ? lastSilverTicketDate.getUTCFullYear() : -1;
+
+				if (currentMonth !== lastSilverMonth || currentYear !== lastSilverYear) {
+					await addTicket('silver');
+					await setLastSilverTicketDate(now.toISOString());
+				}
+			}
+
+			// Special Gold Tickets
+			const specialDates = [
+				{ month: 1, day: 14 }, // Feb 14 (0-indexed month)
+				{ month: 8, day: 21 }, // Sept 21
+				{ month: 11, day: 25 } // Dec 25
+			];
+
+			const isSpecialDate = specialDates.some(
+				(d) => d.month === now.getUTCMonth() && d.day === now.getUTCDate()
+			);
+
+			if (isSpecialDate) {
+				const currentDayOfYear = Math.floor((now.getTime() - SEVEN_HOURS_IN_MS) / ONE_DAY_IN_MS);
+				const lastGoldDayOfYear = lastGoldTicketDate
+					? Math.floor((lastGoldTicketDate.getTime() - SEVEN_HOURS_IN_MS) / ONE_DAY_IN_MS)
+					: -1;
+
+				if (currentDayOfYear > lastGoldDayOfYear) {
+					await addTicket('gold');
+					await setLastGoldTicketDate(now.toISOString());
+				}
+			}
+		}
+	} catch (e) {
+		console.error('Error processing ticket logic', e);
+	}
+
+	return awardedDaily;
+}
+
 // Atomic operations
 export async function purchaseFromShop(prizeId: number) {
 	const connection = await pool.getConnection();
@@ -160,10 +268,10 @@ export async function purchaseFromShop(prizeId: number) {
 
 		const price = typeof prize.price === 'string' ? parseFloat(prize.price) : prize.price;
 
-		const [config] = await connection.query(
+		const [config] = (await connection.query(
 			'SELECT config_value FROM app_config WHERE config_key = ? FOR UPDATE',
 			['balance']
-		);
+		)) as [any[], any];
 		const balance = config[0] ? parseFloat(config[0].config_value) : 0;
 
 		if (balance < price) {

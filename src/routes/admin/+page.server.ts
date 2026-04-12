@@ -1,13 +1,22 @@
 import type { Actions } from './$types';
-import { addTicket, removeRandomTicket } from '$lib/server/db/queries';
+import { addTicket, removeRandomTicket, setBalance } from '$lib/server/db/queries';
 import { addPrize, removePrize, updatePrize, getPrizes } from '$lib/server/db/queries';
 
 export const actions: Actions = {
-	addTicket: async () => {
-		await addTicket();
+	updateBalance: async ({ request }) => {
+		const data = await request.formData();
+		const amount = parseFloat(data.get('amount') as string) || 0;
+		await setBalance(amount);
 	},
-	removeTicket: async () => {
-		await removeRandomTicket();
+	addTicket: async ({ request }) => {
+		const data = await request.formData();
+		const tier = (data.get('tier') as 'bronze' | 'silver' | 'gold') || 'bronze';
+		await addTicket(tier);
+	},
+	removeTicket: async ({ request }) => {
+		const data = await request.formData();
+		const tier = (data.get('tier') as 'bronze' | 'silver' | 'gold') || 'bronze';
+		await removeRandomTicket(tier);
 	},
 	addPrize: async ({ request }) => {
 		const data = await request.formData();

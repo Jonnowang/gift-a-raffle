@@ -3,6 +3,7 @@ USE raffle;
 
 CREATE TABLE IF NOT EXISTS tickets (
   id INT AUTO_INCREMENT PRIMARY KEY,
+  tier ENUM('bronze', 'silver', 'gold') NOT NULL DEFAULT 'bronze',
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

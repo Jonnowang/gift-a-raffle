@@ -7,15 +7,24 @@ export const load: PageServerLoad = async () => {
 };
 
 export const actions: Actions = {
-	drawPrize: async () => {
-		const tickets = await getTickets();
+	drawPrize: async ({ request }) => {
+		const formData = await request.formData();
+		const tier = formData.get('tier') as string || 'bronze';
+
+		const allTickets = await getTickets();
+		const tickets = allTickets.filter(t => t.tier === tier);
 		if (tickets.length === 0) {
 			return { prize: 'No tickets available!' };
 		}
 		const ticket = tickets[Math.floor(Math.random() * tickets.length)];
 
 		const prizes = await getPrizes();
-		const availablePrizes = prizes.filter((p) => p.quantity > 0 && p.active);
+		const availablePrizes = prizes.filter((p) => {
+			if (p.quantity <= 0 || !p.active) return false;
+			if (tier === 'gold') return p.weight >= 1 && p.weight <= 500;
+			if (tier === 'silver') return p.weight >= 1 && p.weight <= 100000;
+			return p.weight >= 10000;
+		});
 
 		if (availablePrizes.length === 0) {
 			return { prize: 'No prizes available!' };
